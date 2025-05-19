@@ -50,18 +50,8 @@ def speak(text: str = Form(...)):
     tts_url = f"/tts/{filename}"
     return JSONResponse(content={"tts_url": tts_url})
 
-@app.get("/tts/{filename}")
-async def get_tts(filename: str):
+@app.get("/check_tts_file/{filename}")
+async def check_tts_file(filename: str):
     filepath = os.path.join(TTS_OUTPUT_DIR, filename)
-    if os.path.exists(filepath):
-        return FileResponse(filepath, media_type="audio/mpeg")
-    return JSONResponse(content={"error": "TTS 파일이 없습니다."}, status_code=404)
-
-# ▶▶▶ Android 연결 테스트용 API
-@app.post("/echo")
-def echo(text: str = Form(...)):
-    """
-    안드로이드에서 요청을 테스트할 수 있는 간단한 API.
-    받은 텍스트를 그대로 응답합니다.
-    """
-    return JSONResponse(content={"echo": text})
+    exists = os.path.exists(filepath)
+    return JSONResponse(content={"filename": filename, "exists": exists, "filepath": filepath})
