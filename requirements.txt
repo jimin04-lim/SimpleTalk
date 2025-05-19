@@ -1,6 +1,6 @@
 fastapi
 gtts
-playsound
+playsound==1.2.2
 g2pk
 hangul-romanize
 uvicorn
