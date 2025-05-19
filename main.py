@@ -1,11 +1,11 @@
 from fastapi import FastAPI, Form
 from gtts import gTTS
-from playsound import playsound
 from g2pk import G2p
 from hangul_romanize import Transliter
 from hangul_romanize.rule import academic
 import os
-import tempfile
+import uuid  # uuid 모듈 import
+import tempfile # 더 이상 uuid4를 직접 사용하지 않으므로 필요 없을 수 있지만, 다른 tempfile 기능을 사용할 수도 있으니 일단 유지
 import threading
 from fastapi.responses import JSONResponse, FileResponse
 
@@ -33,7 +33,7 @@ def convert_pronunciation_to_roman(sentence):
 # TTS 재생 (스레드로 실행)
 def generate_tts(text: str) -> str:
     tts = gTTS(text=text, lang='ko')
-    filename = f"{tempfile.uuid4()}.mp3"
+    filename = f"{uuid.uuid4()}.mp3"  # uuid 모듈의 uuid4() 사용
     filepath = os.path.join(TTS_OUTPUT_DIR, filename)
     tts.save(filepath)
     return filename
