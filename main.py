@@ -1,5 +1,4 @@
 from fastapi import FastAPI, Form
-from fastapi.responses import JSONResponse
 from gtts import gTTS
 from playsound import playsound
 from g2pk import G2p
@@ -8,14 +7,13 @@ from hangul_romanize.rule import academic
 import os
 import tempfile
 import threading
+from fastapi.responses import JSONResponse, FileResponse
 
 app = FastAPI()
-
-# g2pk 객체
 g2p = G2p()
-
-# 로마자 변환기
 transliter = Transliter(academic)
+TTS_OUTPUT_DIR = "tts_files" # 음성 파일 저장 디렉토리
+os.makedirs(TTS_OUTPUT_DIR, exist_ok=True)
 
 # 한글 발음을 로마자로 변환
 # 입력 문장을 발음 변환 후 로마자로 변환.
@@ -33,16 +31,12 @@ def convert_pronunciation_to_roman(sentence):
     return result
 
 # TTS 재생 (스레드로 실행)
-def speak_korean(text: str):
-    def _play():
-        tts = gTTS(text=text, lang='ko')
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as fp:
-            temp_path = fp.name
-        tts.save(temp_path)
-        playsound(temp_path)
-        os.remove(temp_path)
-
-    threading.Thread(target=_play).start()
+def generate_tts(text: str) -> str:
+    tts = gTTS(text=text, lang='ko')
+    filename = f"{tempfile.uuid4()}.mp3"
+    filepath = os.path.join(TTS_OUTPUT_DIR, filename)
+    tts.save(filepath)
+    return filename
 
 # 로마자 변환 API
 @app.post("/romanize")
@@ -50,11 +44,18 @@ def romanize(text: str = Form(...)):
     romanized = convert_pronunciation_to_roman(text)
     return JSONResponse(content={"input": text, "romanized": romanized})
 
-# TTS 재생 API
 @app.post("/speak")
 def speak(text: str = Form(...)):
-    speak_korean(text)
-    return JSONResponse(content={"message": f"'{text}'를 재생합니다."})
+    filename = generate_tts(text)
+    tts_url = f"/tts/{filename}"
+    return JSONResponse(content={"tts_url": tts_url})
+
+@app.get("/tts/{filename}")
+async def get_tts(filename: str):
+    filepath = os.path.join(TTS_OUTPUT_DIR, filename)
+    if os.path.exists(filepath):
+        return FileResponse(filepath, media_type="audio/mpeg")
+    return JSONResponse(content={"error": "TTS 파일이 없습니다."}, status_code=404)
 
 # ▶▶▶ Android 연결 테스트용 API
 @app.post("/echo")
