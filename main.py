@@ -12,14 +12,10 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 
 # --- 환경 변수 설정 ---
-# OpenAI API 키는 환경 변수에서 로드해야 합니다.
-# ⚠️ 중요: 실제 배포 시에는 절대로 API 키를 코드에 직접 넣지 마세요.
-# Render 대시보드에서 'Environment' 설정에 OPENAI_API_KEY를 추가해야 합니다.
 api_key = os.getenv("OPENAI_API_KEY")
 
 if not api_key:
-    # 환경 변수가 설정되지 않았다면 에러 발생 (배포 시 필수 확인)
-    raise ValueError("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다. API 키를 설정해주세요.")
+    raise ValueError("API 키를 설정해주세요.")
 
 # --- OpenAI 클라이언트 초기화 ---
 client = OpenAI(api_key=api_key)
