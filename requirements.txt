@@ -5,3 +5,5 @@ g2pk
 hangul-romanize
 uvicorn
 python-multipart
+korean-romanizer
+Openai
